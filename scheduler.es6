@@ -6,6 +6,15 @@
  * @property {Boolean} config.useTimeEstimates Whether or not to add estimates to the time.
  * @property {Mongo.Collection} Scheduler#cycles the collection of cycles
  */
+
+let initialState = {
+  jobs: [],
+  jobCount: 0,
+  createdAt: new Date,
+  status: 'open',
+  numberCompleted: 0
+}
+
 Scheduler = {
   config: {
     jobsPerCycle: 28,
@@ -31,6 +40,25 @@ Scheduler = {
   },
 
   /**
+   * Updates the current status of a job to "completed".
+   * Updates the count of completed cycles.
+   *
+   * @method Scheduler#setJobCompleted
+   * @param {String} jobId the id of the job to find.
+   * @throws Match.Error if the job id is not a string.
+   * @returns {Number} the result of the Mongo operation.
+   */
+  setJobCompleted: function (jobId) {
+    check(jobId, String);
+    return this.cycles.update({
+      'jobs._id': jobId
+    }, {
+      $set: { 'jobs.$.status': 'completed' },
+      $inc: { 'numberCompleted': 1 }
+    });
+  },
+
+  /**
    * Gets whatever cycle is currently available.
    * If none are available, it will create a new cycle and return that
    *
@@ -46,12 +74,7 @@ Scheduler = {
     if (cycle) {
       return cycle;
     } else {
-      return this.cycles.findOne(this.cycles.insert({
-        jobs: [],
-        jobCount: 0,
-        createdAt: new Date,
-        status: 'open'
-      }));
+      return this.cycles.findOne(this.cycles.insert(initialState));
     }
   },
 
@@ -80,18 +103,14 @@ Scheduler = {
         $lt: this.config.jobsPerCycle
       }
     }, {
-      $setOnInsert: {
-        jobs: [],
-        jobCount: 0,
-        createdAt: new Date,
-        status: 'open'
-      },
+      $setOnInsert: initialState,
       $push: {
         jobs: {
           $each: [{
             _id: docId,
             addedAt: new Date,
-            timeEstimate: estimate
+            timeEstimate: estimate,
+            status: 'open'
           }],
           $sort: { addedAt: 1 },
           $slice: this.config.jobsPerCycle * -1
@@ -129,7 +148,6 @@ Scheduler = {
       },
       $inc: {
         jobCount: -1,
-        timeEstimate: job.jobs[0].timeEstimate * -1
       }
     });
   },
@@ -159,6 +177,11 @@ Scheduler = {
     check(query, Object);
     check(projection, Object);
     return this.cycles.find(query, projection);
+  },
+
+  getCycle: function (cycleId) {
+    check(cycleId, String);
+    return this.cycles.findOne(cycleId);
   }
 };
 
