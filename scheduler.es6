@@ -19,7 +19,7 @@ Scheduler = {
   config: {
     jobsPerCycle: 28,
     useTimeEstimates: true,
-    defaultTimeEstimate: 60 * 60 * 1000,
+    defaultTimeEstimate: 60 * 1000,
     collectionOptions: {}
   },
   cycles: new Mongo.Collection('scheduled_jobs'),
@@ -50,12 +50,26 @@ Scheduler = {
    */
   setJobCompleted: function (jobId) {
     check(jobId, String);
+
     return this.cycles.update({
       'jobs._id': jobId
     }, {
       $set: { 'jobs.$.status': 'completed' },
       $inc: { 'numberCompleted': 1 }
     });
+  },
+
+  /**
+   * Gets the _id of every job in a cycle that is open.
+   *
+   * @method Scheduler#getJobQueue
+   * @param {String} cycleId the id of the job to find.
+   * @throws Match.Error if the job id is not a string.
+   * @returns {Array} an array of _ids representing the open jobs.
+   */
+  getJobQueue: function (cycleId) {
+    check(cycleId, String);
+    return _.pluck(_.filter(this.cycles.findOne(cycleId).jobs, { status: 'open' }), '_id');
   },
 
   /**

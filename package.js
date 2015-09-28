@@ -1,6 +1,6 @@
 Package.describe({
   name: 'insightfil:scheduler',
-  version: '0.0.4',
+  version: '0.0.7',
   summary: 'Manage batches of jobs',
   git: '',
   documentation: 'README.md'
