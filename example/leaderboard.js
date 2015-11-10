@@ -1,9 +1,7 @@
 Games = new Mongo.Collection('orders');
 Players = new Mongo.Collection('customers');
-PlayerQueue = new Scheduler({
-  name: 'player_queue',
-  collection: Players
-});
+Characters = new Mongo.Collection('characters');
+PlayerQueue = new Scheduler('player_queue', Players);
 
 if (Meteor.isClient) {
   Template.jobs.helpers({
@@ -26,9 +24,9 @@ if (Meteor.isClient) {
 } else {
   Meteor.startup(function () {
     Players.upsert({
-      name: 'Steve'
+      name: 'Steve',
     }, {
-      $set: { name: 'Steve' },
+      $set: { status: 'ready' },
       $setOnInsert: { score: 0 }
     });
   });

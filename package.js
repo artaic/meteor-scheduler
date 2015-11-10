@@ -11,12 +11,14 @@ Package.onUse(function(api) {
 
   api.use([
     'mongo',
+    'ecmascript',
     'underscore',
-    'ecmascript'
+    'meteorhacks:aggregate',
+    'raix:eventemitter',
   ]);
 
   api.export('Scheduler');
-  api.addFiles('scheduler.js');
+  api.addFiles(['common.js']);
 });
 
 Package.onTest(function(api) {
