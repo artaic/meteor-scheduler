@@ -1,3 +1,10 @@
+Games = new Mongo.Collection('orders');
+Players = new Mongo.Collection('customers');
+PlayerQueue = new Scheduler({
+  name: 'player_queue',
+  collection: Players
+});
+
 if (Meteor.isClient) {
   Template.jobs.helpers({
     cycles: function () {
@@ -17,10 +24,12 @@ if (Meteor.isClient) {
     }
   });
 } else {
-  Meteor.methods({
-    'addJob': function (jobId) {
-      check(jobId, String);
-      Scheduler.addJob(jobId);
-    }
+  Meteor.startup(function () {
+    Players.upsert({
+      name: 'Steve'
+    }, {
+      $set: { name: 'Steve' },
+      $setOnInsert: { score: 0 }
+    });
   });
 }
