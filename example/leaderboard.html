@@ -11,20 +11,17 @@
 
 <template name="jobs">
   <ol class="cycles">
-    {{#each cycles}}
-      <h3>Cycle {{ _id }}</h3>
+    {{#each queue}}
       <div>
         <div>
           <dl class="dl-horizontal">
-            <dt>Jobs</dt>
-            <dd>{{ jobCount }}</dd>
-            <dt>Estimated completion</dt>
-            <dd>{{ duration timeEstimate }}</dd>
+            <dt>Queued Players</dt>
+            <dt>Estimated Time Left</dt>
           </dl>
         </div>
         <ul>
-          {{#each jobs}}
-            <li>{{ _id }}</li>
+          {{#each queue}}
+            <li>{{ name }}</li>
           {{/each}}
         </ul>
       </div>

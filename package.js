@@ -13,12 +13,11 @@ Package.onUse(function(api) {
     'mongo',
     'ecmascript',
     'underscore',
-    'meteorhacks:aggregate',
     'raix:eventemitter',
   ]);
 
-  api.export('Scheduler');
-  api.addFiles(['common.js']);
+  api.export(['Scheduler', 'Steps']);
+  api.addFiles(['scheduler.js', 'steps.js', 'agenda.js']);
 });
 
 Package.onTest(function(api) {

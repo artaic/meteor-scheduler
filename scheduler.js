@@ -6,41 +6,45 @@
 const defaultConfig = {
   jobLimit: 28,
   removeOnComplete: false,
-  selector: {}
+  selector: {},
 };
 
 Scheduler = class Scheduler extends Mongo.Collection {
-  constructor(name, collection, options=defaultConfig) {
+  constructor(name, collection, options) {
     check(name, String);
     check(collection, Mongo.Collection);
-    check(options, Match.ObjectIncluding({}));
 
-    super(name, options);
+    const config = Object.assign(defaultConfig, options);
+    super(name, config);
+    this.transform = function (doc) {
+      console.log(doc);
+      console.log(this);
+    }
+
     _.extend(this, new EventEmitter());
+    this._config = config;
 
     if (Meteor.isServer) {
-      this.observer = collection.find(options.selector).observeChanges({
+      this.observer = collection.find(this._config.selector).observeChanges({
         added: this.queue.bind(this),
         removed: this.dequeue.bind(this)
       });
     }
-
-    this.config = options;
   }
 
-  get settings() {
-    return this.config;
-  }
-
-  configure(settings) {
-    check(settings, Match.ObjectIncluding({}));
-    this.config = Object.assign(this.config, settings);
+  get config() {
+    return this._config;
   }
 
   get jobs() {
     return this.find()
       .map(doc => doc.queue.filter(job => job.status === 'queued'))
       .reduce((result, obj) => [...result, ...obj], []);
+  }
+
+  configure(settings) {
+    check(settings, Match.ObjectIncluding({}));
+    this._config = Object.assign(this._config, settings);
   }
 
   queue(id) {
@@ -56,7 +60,7 @@ Scheduler = class Scheduler extends Mongo.Collection {
       });
     } else {
       this.upsert({
-        count: { $lt: this.config.jobLimit }
+        count: { $lt: this._config.jobLimit }
       }, {
         $setOnInsert: {
           queue: [],
@@ -70,7 +74,7 @@ Scheduler = class Scheduler extends Mongo.Collection {
               addedAt: new Date,
               status: 'queued'
             }],
-            $slice: this.config.jobLimit,
+            $slice: this._config.jobLimit,
             $sort: { addedAt: 1 }
           }
         },
@@ -97,7 +101,7 @@ Scheduler = class Scheduler extends Mongo.Collection {
   complete(id) {
     check(id, String);
 
-    if (this.config.removeOnComplete) {
+    if (this._config.removeOnComplete) {
       return this.update({
         'queue._id': id
       }, {

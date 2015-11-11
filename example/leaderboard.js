@@ -5,24 +5,26 @@ PlayerQueue = new Scheduler('player_queue', Players);
 
 if (Meteor.isClient) {
   Template.jobs.helpers({
-    cycles: function () {
-      return Scheduler.getCycles();
-    },
-    duration: function (timeEstimate) {
-      return moment.duration(timeEstimate).humanize();
-    }
+    ready: () => Template.instance().gameReady.get(),
+    queue: () => PlayerQueue.find()
   });
 
   Template.jobs.events({
-    'submit form.add-job': function (e, template) {
-      e.preventDefault();
-
-      let jobId = $(e.target).find('input[name="job-id"]').val();
-      Meteor.call('addJob', jobId);
+    'click button[data-action="join-game"]': function (e, template) {
     }
+  });
+
+  Template.jobs.onRendered(function () {
+    this.gameReady = new ReactiveVar(false);
+    PlayerQueue.on('');
   });
 } else {
   Meteor.startup(function () {
+    [{
+      name: 'Genji',
+      url: 'https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcS16yESVbqTvFQRs0yfFUMppNdRNJJq82li4yu5D35AokXkP7vd'
+    }].forEach(character => Characters.upsert({ name: character.name }, { $set: character }));
+
     Players.upsert({
       name: 'Steve',
     }, {
