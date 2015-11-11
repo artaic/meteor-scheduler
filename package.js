@@ -1,6 +1,6 @@
 Package.describe({
   name: 'insightfil:scheduler',
-  version: '0.0.8',
+  version: '0.1.0',
   summary: 'Manage batches of jobs',
   git: '',
   documentation: 'README.md'
@@ -11,6 +11,7 @@ Package.onUse(function(api) {
 
   api.use([
     'mongo',
+    'check',
     'ecmascript',
     'underscore',
     'raix:eventemitter',
@@ -28,9 +29,9 @@ Package.onUse(function(api) {
 });
 
 Package.onTest(function(api) {
-  api.use(['practicalmeteor:munit', 'underscore']);
+  api.use(['tinytest', 'ecmascript', 'mongo']);
   api.use('insightfil:scheduler');
-  api.addFiles('scheduler-tests.js');
+  api.addFiles('tests/scheduler.js');
 });
 
 Npm.depends({
