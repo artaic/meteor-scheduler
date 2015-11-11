@@ -9,16 +9,23 @@ Steps = class Steps {
       throw new Meteor.Error(400, 'Invalid steps definition');
     }
     this.steps = steps;
-    this.current = steps;
+    this.current = this.next();
   }
   /**
    * Checks the given set of steps on initialization to see if they're valid
-   * Each step should have a name, optional description, and a completion state
-   * Optionally, it can have an array called "tasks" that references child tasks to complete
+   * Each step must contain:
+   *   - name {String} the name of the step
+   *   - complete {Boolean} the state of the step.
+   * Optional properties for each step are:
+   *   - tasks {[Object]}
+   *     A list containing steps, where steps have the same format listed here (recursive definition)
+   *     Each task can also contain tasks. This is a tree-like structure.
+   *   - description {String} a string (example: 'Cut tomatoes into 1/4 inch thick cubes')
    *
-   * @function Steps#_isStepsValid
-   * @module Steps
    * @private
+   * @module Steps
+   * @function Steps#_isStepsValid
+   *
    * @param {Array} steps the steps to check
    * @returns {Boolean} the validity of the given object
    */
@@ -30,7 +37,7 @@ Steps = class Steps {
         complete: Boolean,
         tasks: Match.Optional(Match.Where(function (tasks) {
           check(tasks, [Object]);
-          return tasks.length > 0;
+          return tasks.length > 0 && this._isStepsValid(tasks);
         }))
       }));
 

@@ -16,12 +16,23 @@ Package.onUse(function(api) {
     'raix:eventemitter',
   ]);
 
+  api.use('cosmos:browserify', 'client');
+  api.addFiles('src/babel-polyfill.browserify.js', 'client');
+
   api.export(['Scheduler', 'Steps']);
-  api.addFiles(['scheduler.js', 'steps.js', 'agenda.js']);
+  api.addFiles([
+    'src/scheduler.js',
+    'src/steps.js',
+    'src/agenda.js'
+  ]);
 });
 
 Package.onTest(function(api) {
   api.use(['practicalmeteor:munit', 'underscore']);
   api.use('insightfil:scheduler');
   api.addFiles('scheduler-tests.js');
+});
+
+Npm.depends({
+  'babel-polyfill': '6.1.4'
 });
