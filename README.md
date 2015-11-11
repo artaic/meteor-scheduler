@@ -14,7 +14,6 @@ PlayerQueue = new Scheduler('player_queue', Players, {
       { status: 'ready' }
     ]
   },
-  collection
   connection: DDP.connect('http://localhost:4000/')
 });
 ```
@@ -23,36 +22,56 @@ PlayerQueue = new Scheduler('player_queue', Players, {
 name of the collection in the database
 
 #### collection {Mongo.Collection}
-The collection to watch
+The collection to watch.
 
 #### options {Object}
-- selector
+- selector [{}] {Object}
+
 The selector to watch. In the above example, it will wait for all
 players who are online and ready to add to the queue
 
-*_special note_*
-if something is _removed_ from this collection, it will also be removed
-from the schedule.
+- jobLimit [28] {Number}
 
+The number that should be allowed in the queue before created a new
+batch.
+
+- defaultEstimate [60000] {Number}
+
+The number of milliseconds estimated for each job
+
+_note_ `idGeneration`, `connection`, and `transform` will be passed to
+the Collection instance on the `super` call (scheduler.js, line 18)
+
+## Properties
+
+- [Scheduler]#jobs
+
+Returns all the jobs that are queued, sorted by the date they were
+added.
+
+- [Scheduler]#config
+
+The current configuration
 
 ## Events
 
-```
-locked
-```
-Occurs when a cycle has become locked. When a cycle is locked, it will
-not be added to or removed from automatically.
+- **locked**
+
+Once a cycle is set to locked, it will no longer automatically queue
+documents.
 
 Passes no parameters to the callback function.
 
-```
-cycle full
-```
+- **unlocked**
+
+Things can now be queued and dequeued.
+
+- **cycle full**
+
 Occurs when a cycle has reached the `config.limit` amount of jobs.
 This will pass the `_id` of the cycle to the callback function.
 
-```
-cycle added
-```
+- **cycle added**
+
 Occurs when a new cycle has been inserted
 passes the `_id` of the cycle to the callback.

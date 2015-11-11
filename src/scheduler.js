@@ -11,19 +11,14 @@ const defaultConfig = {
 };
 
 Scheduler = class Scheduler extends Mongo.Collection {
-  constructor(name, collection, options) {
+  constructor(name, collection, options=defaultConfig) {
     check(name, String);
     check(collection, Mongo.Collection);
 
-    const config = Object.assign(defaultConfig, options);
-    super(name, config);
-    this.transform = function (doc) {
-      console.log(doc);
-      console.log(this);
-    }
+    super(name, _.pick(options, 'idGeneration', 'connection', 'transform'));
 
     _.extend(this, new EventEmitter());
-    this._config = config;
+    this._config = _.omit(options, 'idGeneration', 'connection', 'transform');
 
     if (Meteor.isServer) {
       this.observer = collection.find(this._config.selector).observeChanges({
