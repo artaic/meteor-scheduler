@@ -1,6 +1,6 @@
 Package.describe({
   name: 'insightfil:scheduler',
-  version: '0.1.0',
+  version: '0.2.0',
   summary: 'Manage batches of jobs',
   git: '',
   documentation: 'README.md'
@@ -14,11 +14,8 @@ Package.onUse(function(api) {
     'check',
     'ecmascript',
     'underscore',
-    'raix:eventemitter',
+    'raix:eventemitter@0.1.3',
   ]);
-
-  api.use('cosmos:browserify', 'client');
-  api.addFiles('src/babel-polyfill.browserify.js', 'client');
 
   api.export(['Scheduler', 'Steps']);
   api.addFiles([
@@ -32,8 +29,4 @@ Package.onTest(function(api) {
   api.use(['tinytest', 'ecmascript', 'mongo']);
   api.use('insightfil:scheduler');
   api.addFiles('tests/scheduler.js');
-});
-
-Npm.depends({
-  'babel-polyfill': '6.1.4'
 });

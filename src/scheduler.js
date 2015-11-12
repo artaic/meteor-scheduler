@@ -11,21 +11,29 @@ const defaultConfig = {
 };
 
 Scheduler = class Scheduler extends Mongo.Collection {
-  constructor(name, collection, options=defaultConfig) {
-    check(name, String);
+  constructor(collection, name, options) {
     check(collection, Mongo.Collection);
+    check(name, String);
 
-    super(name, _.pick(options, 'idGeneration', 'connection', 'transform'));
+    console.log(name);
+
+    let config = Object.assign(defaultConfig, options);
+
+    super(name, config);
+    this._config = config;
 
     _.extend(this, new EventEmitter());
-    this._config = _.omit(options, 'idGeneration', 'connection', 'transform');
 
-    if (Meteor.isServer) {
-      this.observer = collection.find(this._config.selector).observeChanges({
+    if (Meteor.server && !super.connection) {
+      this._observer = collection.find(this._config.selector).observeChanges({
         added: id => this.queue.call(this, id),
         removed: id => this.dequeue.call(this, id)
       });
     }
+
+    this._cycleWatcher = this.find({ count: config.jobLimit }).observeChanges({
+      added: id => this.emit('cycle ready', id)
+    });
   }
 
   get config() {
@@ -43,9 +51,8 @@ Scheduler = class Scheduler extends Mongo.Collection {
     this._config = Object.assign(this._config, settings);
   }
 
-  queue(id, timeEstimate=this.config.defaultEstimate) {
+  queue(id) {
     check(id, String);
-    check(timeEstimate, Number);
 
     if (this.findOne({ 'queue._id': id })) {
       this.update({
@@ -56,7 +63,7 @@ Scheduler = class Scheduler extends Mongo.Collection {
         }
       });
     } else {
-      this.upsert({
+      let res = this.upsert({
         locked: false,
         count: { $lt: this._config.jobLimit }
       }, {
@@ -65,7 +72,8 @@ Scheduler = class Scheduler extends Mongo.Collection {
           createdAt: new Date,
           count: 0,
           numberComplete: 0,
-          locked: false
+          locked: false,
+          timeEstimate: 0
         },
         $addToSet: {
           queue: {
@@ -73,15 +81,22 @@ Scheduler = class Scheduler extends Mongo.Collection {
               _id: id,
               addedAt: new Date,
               status: 'queued',
-              timeEstimate: timeEstimate
+              timeEstimate: this.config.defaultEstimate
             }],
             $slice: this._config.jobLimit,
             $sort: { addedAt: 1 }
           }
         },
-        $inc: { count: 1 }
+        $inc: {
+          count: 1,
+          timeEstimate: this.config.defaultEstimate
+        }
       });
+
       this.emit('job added', id);
+      if (res.insertedId) {
+        this.emit('cycle added', res.insertedId);
+      }
     }
   }
 

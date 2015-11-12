@@ -1,7 +1,7 @@
 Games = new Mongo.Collection('orders');
 Players = new Mongo.Collection('customers');
 Characters = new Mongo.Collection('characters');
-PlayerQueue = new Scheduler('player_queue', Players);
+PlayerQueue = new Scheduler(Players, 'player_queue', {});
 
 if (Meteor.isClient) {
   Template.jobs.helpers({
@@ -16,7 +16,6 @@ if (Meteor.isClient) {
 
   Template.jobs.onRendered(function () {
     this.gameReady = new ReactiveVar(false);
-    PlayerQueue.on('');
   });
 } else {
   Meteor.startup(function () {
